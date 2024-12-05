@@ -15,8 +15,10 @@ const place = defineModel();
 const lang = ref('en');
 
 const places = [
-  { osmId: '188022', name: 'Philadelphia' },
+  { osmId: '594508', name: 'Johannesburg' },
   { osmId: '207359', name: 'Los Angeles' },
+  { osmId: '175905', name: 'New York City' },
+  { osmId: '188022', name: 'Philadelphia' },
 ];
 
 const osmId = ref('');
