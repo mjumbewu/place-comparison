@@ -27,5 +27,6 @@ const places = computed(() => {
 .chooser {
   display: flex;
   flex-direction: row;
+  gap: 1rem;
 }
 </style>

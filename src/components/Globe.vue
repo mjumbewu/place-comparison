@@ -215,22 +215,24 @@ const handleOverlapChange = () => {
   background-color: #fff;
 }
 
-.boundary0 {
+.boundary0, .boundary1 {
+  fill: none;
   stroke-width: 2px;
-  stroke: rgb(0 0 255);
-  fill: rgb(0 0 255 / 0.1);
-}
-
-.boundary1 {
-  stroke-width: 2px;
-  stroke: rgb(0 128 0);
-  fill: rgb(0 128 0 / 0.1);
 }
 
 .world0, .world1 {
   fill: none;
-  stroke: rgba(0 0 0 / 0.5);
   stroke-width: 1px;
+}
+
+.boundary0, .world0 {
+  stroke: rgb(0 0 255);
+  /* fill: rgb(0 0 255 / 0.1); */
+}
+
+.boundary1, .world1 {
+  stroke: rgb(0 128 0);
+  /* fill: rgb(0 128 0 / 0.1); */
 }
 
 .globe {
