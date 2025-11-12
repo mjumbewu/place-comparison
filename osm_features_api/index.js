@@ -1,5 +1,5 @@
-const functions = require('@google-cloud/functions-framework');
-const {BigQuery} = require('@google-cloud/bigquery');
+import functions from '@google-cloud/functions-framework';
+import {BigQuery} from '@google-cloud/bigquery';
 
 /**
  * CORS middleware for Cloud Functions.
