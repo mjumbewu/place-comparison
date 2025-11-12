@@ -28,18 +28,35 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./boundary_compare_app
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Build
+        run: npm run build
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        
+      
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          # Upload dist folder to be deployed
+          path: './dist'
           
       - name: Deploy to GitHub Pages
         id: deployment
