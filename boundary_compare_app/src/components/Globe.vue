@@ -13,7 +13,7 @@ import * as d3 from 'd3';
 import * as turf from "@turf/turf";
 import * as _ from 'lodash';
 
-const { places } = defineProps(['places']);
+const { places, colors } = defineProps(['places', 'colors']);
 
 let time = ref(0);
 let overlap = ref(true);
@@ -25,10 +25,8 @@ let initialScale = null;
 let scaleInterpolator = null;
 const opacityInterpolator = d3.interpolateNumber(1, 0);
 
-let globe0 = null;
-let globe1 = null;
-let group0 = null;
-let group1 = null;
+let globes = [];
+let groups = [];
 
 let worldData = null;
 d3.json('https://gist.githubusercontent.com/d3indepth/f28e1c3a99ea6d84986f35ac8646fac7/raw/c58cede8dab4673c91a3db702d50f7447b373d98/ne_110m_land.json')
@@ -47,14 +45,19 @@ watch(() => places, (newPlaces, oldPlaces) => {
 });
 
 class Globe {
-  constructor(id, el, root, scale) {
+  constructor(id, el, root, scale, color) {
     this.id = id;
     this.el = el;
     this.root = root;
     this.scale = scale;
+    this.color = color;
 
-    this.boundary = root.append('path').attr('class', `boundary${id} projection${id}`);
-    this.world = root.append('path').attr('class', `world${id} projection${id}`);
+    this.boundary = root.append('path')
+      .attr('class', `boundary boundary${id} projection projection${id}`)
+      .style('stroke', color);
+    this.world = root.append('path')
+      .attr('class', `world world${id} projection projection${id}`)
+      .style('stroke', color);
   }
 
   async reset() {
@@ -104,7 +107,7 @@ class Globe {
   }
 }
 
-async function initGlobes() {
+async function initGlobes(count = 2) {
   const globeEl = document.querySelector('.globe');
   const svg = d3.select(globeEl).append('svg')
     .attr('width', '100%')
@@ -112,11 +115,12 @@ async function initGlobes() {
 
   initClientSize(globeEl);
 
-  group0 = svg.append('g').attr('class', 'globe globe0');
-  group1 = svg.append('g').attr('class', 'globe globe1');
-
-  globe0 = new Globe(0, globeEl, group0, initialScale);
-  globe1 = new Globe(1, globeEl, group1, initialScale);
+  for (let i = 0; i < count; i++) {
+    const group = svg.append('g').attr('class', `globe globe${i}`);
+    const globe = new Globe(i, globeEl, group, initialScale, colors[i]);
+    globes.push(globe);
+    groups.push(group);
+  }
 }
 
 function initClientSize(el) {
@@ -130,10 +134,7 @@ async function resetGlobes() {
   stopAnimation();
 
   // Reset the globe boundaries.
-  await Promise.all([
-    globe0.reset(),
-    globe1.reset(),
-  ]);
+  await Promise.all(globes.map((globe) => globe.reset()));
 
   // Create an interpolator for the globes' scale.
   updateScaleInterpolator();
@@ -146,8 +147,8 @@ function updateScaleInterpolator() {
   scaleInterpolator = d3.interpolateNumber(
     initialScale,
     Math.min(
-      width / Math.max(globe0.boundaryWidth, globe1.boundaryWidth),
-      height / Math.max(globe0.boundaryHeight, globe1.boundaryHeight)
+      width / Math.max(...globes.map((g) => g.boundaryWidth)),
+      height / Math.max(...globes.map((g) => g.boundaryHeight))
     ) * 4096,  // <-- Empirically determined to be a good scale factor. Happens to be 64^2.
   );
 }
@@ -175,21 +176,21 @@ function updateView() {
   }
 
   const commonScale = time.value < 0.5 ? scaleInterpolator(0) : scaleInterpolator(d3.easeExpInOut((time.value-0.5)*2));
-  globe0.setScale(commonScale);
-  globe1.setScale(commonScale);
+  globes.forEach((globe) => globe.setScale(commonScale));
 
   const commonOpacity = time.value < 0.5 ? opacityInterpolator(0) : opacityInterpolator(d3.easeExpInOut((time.value-0.5)*2));
-  globe0.setOpacity(commonOpacity);
-  globe1.setOpacity(commonOpacity);
+  globes.forEach((globe) => globe.setOpacity(commonOpacity));
 }
 
 function updateOverlapDisplay() {
   if (overlap.value) {
-    group0.style('transform', 'translateX(0)');
-    group1.style('transform', 'translateX(0)');
+    groups.forEach((group) => group.style('transform', 'translateX(0)'));
   } else {
-    group0.style('transform', 'translateX(-25%)');
-    group1.style('transform', 'translateX(25%)');
+    const spaces = groups.length + 1;
+    const spaceSize = 100.0 / spaces;
+    groups.forEach((group, i) => {
+      group.style('transform', `translateX(${spaceSize * (i - (groups.length - 1) / 2.0)}%)`);
+    });
   }
 }
 
@@ -215,24 +216,14 @@ const handleOverlapChange = () => {
   background-color: #fff;
 }
 
-.boundary0, .boundary1 {
+.boundary {
   fill: none;
   stroke-width: 2px;
 }
 
-.world0, .world1 {
+.world {
   fill: none;
   stroke-width: 1px;
-}
-
-.boundary0, .world0 {
-  stroke: rgb(0 0 255);
-  /* fill: rgb(0 0 255 / 0.1); */
-}
-
-.boundary1, .world1 {
-  stroke: rgb(0 128 0);
-  /* fill: rgb(0 128 0 / 0.1); */
 }
 
 .globe {

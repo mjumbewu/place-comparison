@@ -12,12 +12,15 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, defineModel, nextTick, useTemplateRef } from 'vue';
+import { ref, defineEmits, defineModel, defineProps, nextTick, useTemplateRef } from 'vue';
 import * as _ from 'lodash';
 
 const emit = defineEmits(['change']);
 const place = defineModel();
+const {color} = defineProps(['color']);
 const lang = ref('en');
+
+console.log(color);
 
 const label = ref('(Click to search for a place)')
 const isQuerying = ref(false);
@@ -25,13 +28,6 @@ const searchQuery = ref('');
 const autocompleteResults = ref([]);
 
 const searchQueryInput = useTemplateRef('searchQueryInput');
-
-// const places = [
-//   { osmId: '594508', name: 'Johannesburg' },
-//   { osmId: '207359', name: 'Los Angeles' },
-//   { osmId: '175905', name: 'New York City' },
-//   { osmId: '188022', name: 'Philadelphia' },
-// ];
 
 const autocompleteURL = 'https://us-east4-osm-shape-access.cloudfunctions.net/osm_ids';
 
@@ -52,11 +48,10 @@ const updateQueryAutocompleteResults = _.debounce(async function (query) {
 }, 500, { });
 
 function autocompleteResultLabel(result) {
-  return result.name + (
-    result.tags?.is_in ? ` (${result.tags.is_in})` :
-    result.tags?.wikipedia ? ` (${result.tags.wikipedia})` :
-    ''
-  );
+  return result.name +
+    (result.tags?.[`name:${lang.value}`] ? ` (${lang.value}: ${result.tags[`name:${lang.value}`]})` :
+     result.tags?.is_in ? ` (${result.tags.is_in})` : '') +
+    (result.tags?.wikipedia ? ` (${result.tags.wikipedia})` : '');
 }
 
 function startQuerying() {
@@ -95,6 +90,7 @@ function handleResultClick(result) {
 <style scoped>
 .wrapper {
   position: relative;
+  color: v-bind(color);
 }
 
 ul {
