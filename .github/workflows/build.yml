@@ -42,6 +42,7 @@ jobs:
         with:
           node-version: 'lts/*'
           cache: 'npm'
+          cache-dependency-path: ./boundary_compare_app/package-lock.json
       
       - name: Install dependencies
         run: npm install
