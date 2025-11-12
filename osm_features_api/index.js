@@ -59,7 +59,7 @@ functions.http('getOsmIds', cors(async (req, res) => {
   const client = new BigQuery();
   const results = await client.query({
     query: `
-      SELECT osm_id, name, all_tags
+      SELECT osm_id, name, admin_level, all_tags
       FROM \`osm-shape-access.views.osm_administrative_features\`
       WHERE (name LIKE ? OR name_en LIKE ?)
       AND osm_id IS NOT NULL
