@@ -61,12 +61,12 @@ functions.http('getOsmIds', cors(async (req, res) => {
     query: `
       SELECT osm_id, name, all_tags
       FROM \`osm-shape-access.views.osm_administrative_features\`
-      WHERE name LIKE ?
+      WHERE (name LIKE ? OR name_en LIKE ?)
       AND osm_id IS NOT NULL
       ORDER BY admin_level
       LIMIT 10
     `,
-    params: [`%${q}%`]
+    params: [`%${q}%`, `%${q}%`]
   });
 
   res.type('application/json').send(results[0]);
