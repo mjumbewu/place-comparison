@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload dist folder to be deployed
-          path: './dist'
+          path: './boundary_compare_app/dist'
           
       - name: Deploy to GitHub Pages
         id: deployment
