@@ -8,6 +8,11 @@
         <button @click="handleResultClick(result)">{{ autocompleteResultLabel(result) }}</button>
       </li>
     </ul>
+
+    <div class="status">
+      <span v-if="numActiveFetches > 0">Searching for places that match "&hellip;{{ searchQuery }}&hellip;".</span>
+      <span v-else-if="isEmptyResults">No results found for "&hellip;{{ searchQuery }}&hellip;"<br>(remember that search is case-sensitive).</span>
+    </div>
   </div>
 </template>
 
@@ -24,6 +29,8 @@ console.log(color);
 
 const label = ref('(Click to search for a place)')
 const isQuerying = ref(false);
+const numActiveFetches = ref(0);
+const isEmptyResults = ref(false);
 const searchQuery = ref('');
 const autocompleteResults = ref([]);
 
@@ -34,17 +41,22 @@ const autocompleteURL = 'https://us-east4-osm-shape-access.cloudfunctions.net/os
 const updateQueryAutocompleteResults = _.debounce(async function (query) {
   if (query.length < 3) {
     autocompleteResults.value = [];
+    return;
   }
 
+  numActiveFetches.value++;
   const response = await fetch(`${autocompleteURL}?q=${query}&lang=${lang.value}`);
   const data = await response.json();
   console.log('Autocomplete results:', data);
+  numActiveFetches.value--;
 
   autocompleteResults.value = data.map((result) => ({
     osmId: result.osm_id,
     name: result.name,
     tags: Object.fromEntries(result.all_tags.map((tag) => [tag.key, tag.value])),
   }));
+
+  isEmptyResults.value = autocompleteResults.value.length === 0;
 }, 500, { });
 
 function autocompleteResultLabel(result) {
