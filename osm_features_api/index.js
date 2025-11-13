@@ -63,10 +63,17 @@ functions.http('getOsmIds', cors(async (req, res) => {
       FROM \`osm-shape-access.views.osm_administrative_features\`
       WHERE (name LIKE ? OR name_en LIKE ?)
       AND osm_id IS NOT NULL
-      ORDER BY admin_level
+      ORDER BY
+        -- Sort first by closer matches, using edit distance (e.g. 'Paris' should
+        -- always match 'Paris' before 'Parish')...
+        LEAST(
+          COALESCE(EDIT_DISTANCE(?, name), 999),
+          COALESCE(EDIT_DISTANCE(?, name_en), 999)) ASC,
+        -- Then by admin level (lower levels are larger areas, more likely to be searched for)
+        admin_level ASC
       LIMIT 10
     `,
-    params: [`%${q}%`, `%${q}%`]
+    params: [`%${q}%`, `%${q}%`, q, q]
   });
 
   res.type('application/json').send(results[0]);
